@@ -1,4 +1,4 @@
-import { IsArray, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 
 export class CreateProductDto {
   @IsString()
@@ -6,4 +6,7 @@ export class CreateProductDto {
 
   @IsString()
   code: string;
+
+  @IsNumber()
+  is_deleted: number;
 } 

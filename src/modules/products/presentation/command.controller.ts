@@ -11,8 +11,8 @@ import { UpdateProductDto } from './dto/command/update-product.dto';
 
 @ApiTags('product/command')
 @Controller('product/command')
-@UseGuards(AuthnGuard)
-@ApiBearerAuth()
+// @UseGuards(AuthnGuard)
+// @ApiBearerAuth()
 export class ProductCommandController {
   constructor(
     private readonly util: UtilityImplement,
@@ -26,9 +26,9 @@ export class ProductCommandController {
     const msg = {
       messageId: this.util.generateId(),
       data: {
-        id: null,
         code: body.code,
         name: body.name,
+        is_deleted: body.is_deleted === 1,
       },
     };
     const command = new CreateProduct(msg);

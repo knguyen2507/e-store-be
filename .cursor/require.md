@@ -6,3 +6,4 @@ Thực hiện cho tôi các bước sau
  - Sử dụng Swagger/OpenAPI đầy đủ hơn, Thêm API documentation cho từng endpoint, Thêm example request/response
  - Optimize database queries, Implement pagination cho tất cả list APIs, Sử dụng connection pooling
  - Setup linting rules, Thêm pre-commit hooks, Code review guidelines
+5. Thêm try catch xử lý lỗi

@@ -1,4 +1,4 @@
-import { Inject } from '@nestjs/common';
+import { Inject, InternalServerErrorException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UtilityImplement } from 'src/libs/utility/utility.module';
 import { UpdateProduct } from '.';
@@ -14,10 +14,15 @@ export class UpdateProductHandler implements ICommandHandler<UpdateProduct, void
   ) {}
 
   async execute(command: UpdateProduct): Promise<void> {
-    const { id, ...data } = command.data;
-    const model = await this.product.getById(id);
-    model.update({ ...data });
+    try {
+      const { id, ...data } = command.data;
+      const model = await this.product.getById(id);
+      model.update({ ...data });
 
-    await this.product.update(model);
+      await this.product.update(model);
+    } catch (error) {
+      console.log('UpdateProductHandler:error:::', error.message);
+      throw new InternalServerErrorException(`Không thể cập nhật product ${command.data.id}`);
+    }
   }
 }

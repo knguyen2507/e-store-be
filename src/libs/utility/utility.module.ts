@@ -1,7 +1,7 @@
 import { Global, Inject, Injectable, Module } from '@nestjs/common';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv7 } from "uuidv7";
 import moment from 'moment';
 import { RedisModule } from '../redis/redis.module';
 import { UserInterface } from './interface/user.interface';
@@ -16,7 +16,7 @@ export class UtilityImplement {
   ) {}
 
   generateId() {
-    return uuidv4();
+    return uuidv7();
   }
 
   passwordHash(password: string) {

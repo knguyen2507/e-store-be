@@ -13,7 +13,7 @@ import { environment } from 'src/environment';
         password: environment.DB_PASSWORD,
         database: environment.DB_NAME,
         entities: [__dirname + '/../../**/*.entity{.ts,.js}'],
-        synchronize: false,
+        synchronize: true,
         logging: environment.DB_LOGGING === 1,
       }),
     }),
