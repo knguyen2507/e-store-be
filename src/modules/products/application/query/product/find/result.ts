@@ -15,4 +15,10 @@ export class FindProductResult implements IQueryResult {
   readonly items: Readonly<FindProductResultItem>[];
   @Expose()
   readonly total: number;
+  @Expose()
+  readonly page: number;
+  @Expose()
+  readonly pageSize: number;
+  @Expose()
+  readonly totalPages: number;
 }

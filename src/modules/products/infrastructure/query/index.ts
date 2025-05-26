@@ -1,4 +1,4 @@
-import { Inject } from '@nestjs/common';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
 import { UtilityImplement } from 'src/libs/utility/utility.module';
 import { ProductQuery } from 'src/modules/products/domain/query';
@@ -19,31 +19,31 @@ export class ProductQueryImplement implements ProductQuery {
   private readonly repository: Repository<ProductEntity>;
 
   async find(query: FindProduct): Promise<FindProductResult> {
-    const { offset, limit, searchName } = query.data;
-    const list_condition = [];
-    list_condition.push({is_deleted: false});
+    const { offset = 0, limit = 10, searchName, sortBy = 'created_at', sortOrder = 'DESC' } = query.data;
+    
+    // Build query using QueryBuilder for better performance
+    const queryBuilder = this.repository
+      .createQueryBuilder('product')
+      .where('product.is_deleted = :isDeleted', { isDeleted: false });
+
+    // Add search conditions
     if (searchName) {
-      list_condition.push({ name: { contains: searchName, mode: 'insensitive' } });
+      queryBuilder.andWhere('product.name ILIKE :searchName', { searchName: `%${searchName}%` });
     }
 
-    const conditions = list_condition.length > 1
-      ? Object.assign({}, ...list_condition)
-      : list_condition[0];
+    // Add sorting
+    queryBuilder.orderBy(`product.${sortBy}`, sortOrder as 'ASC' | 'DESC');
 
-    const [products, total] = await Promise.all([
-      this.repository.find({
-        where: conditions,
-        skip: Number(offset),
-        take: Number(limit),
-        order: {
-          created_at: 'desc',
-        },
-      }),
-      this.repository.count({ where: conditions }),
-    ]);
+    // Add pagination
+    queryBuilder
+      .skip(Number(offset))
+      .take(Number(limit));
 
-    const items = products.map((i) => {
-      const {is_deleted, ...data} = i;
+    // Execute query with COUNT
+    const [products, total] = await queryBuilder.getManyAndCount();
+
+    const items = products.map((product) => {
+      const { is_deleted, ...data } = product;
       return plainToClass(
         FindProductResultItem,
         data,
@@ -54,15 +54,24 @@ export class ProductQueryImplement implements ProductQuery {
     return {
       items,
       total,
+      page: Math.floor(offset / limit) + 1,
+      pageSize: limit,
+      totalPages: Math.ceil(total / limit)
     };
   }
 
   async findByCode(query: FindProductByCode): Promise<FindProductByCodeResult> {
-    const product = await this.repository.findOneBy({
-      code: query.data.code
-    });
+    const product = await this.repository
+      .createQueryBuilder('product')
+      .where('product.code = :code', { code: query.data.code })
+      .andWhere('product.is_deleted = :isDeleted', { isDeleted: false })
+      .getOne();
 
-    const {is_deleted, ...data} = product;
+    if (!product) {
+      throw new NotFoundException(`Product with code ${query.data.code} not found`);
+    }
+
+    const { is_deleted, ...data } = product;
 
     return plainToClass(FindProductByCodeResult, data, {
       excludeExtraneousValues: true,
@@ -70,11 +79,17 @@ export class ProductQueryImplement implements ProductQuery {
   }
 
   async findById(query: FindProductById): Promise<FindProductByIdResult> {
-    const product = await this.repository.findOneBy({
-      id: query.data.id
-    });
+    const product = await this.repository
+      .createQueryBuilder('product')
+      .where('product.id = :id', { id: query.data.id })
+      .andWhere('product.is_deleted = :isDeleted', { isDeleted: false })
+      .getOne();
 
-    const {is_deleted, ...data} = product;
+    if (!product) {
+      throw new NotFoundException(`Product with id ${query.data.id} not found`);
+    }
+
+    const { is_deleted, ...data } = product;
 
     return plainToClass(FindProductByIdResult, data, {
       excludeExtraneousValues: true,
